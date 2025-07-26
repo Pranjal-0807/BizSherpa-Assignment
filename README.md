@@ -16,7 +16,7 @@ An AI-powered application for analyzing business transcripts and generating pers
 
 - **FastAPI**: Modern Python web framework
 - **Supabase**: PostgreSQL database with real-time features
-- **OpenAI GPT**: AI-powered analysis and generation
+- **Google Gemini AI**: AI-powered analysis and generation
 - **Pydantic**: Data validation and serialization
 - **Python-dotenv**: Environment variable management
 
@@ -32,7 +32,7 @@ An AI-powered application for analyzing business transcripts and generating pers
 
 - Python 3.8+
 - Node.js 18+
-- OpenAI API key
+- Google Gemini API key
 - Supabase account and project
 
 ## Installation
@@ -61,7 +61,7 @@ An AI-powered application for analyzing business transcripts and generating pers
 3. **Install dependencies**
 
    ```bash
-   pip install fastapi uvicorn supabase openai python-dotenv pydantic
+   pip install fastapi uvicorn supabase google-generativeai python-dotenv pydantic
    ```
 
 4. **Set up environment variables**
@@ -70,7 +70,7 @@ An AI-powered application for analyzing business transcripts and generating pers
    ```env
    SUPABASE_URL=your_supabase_project_url
    SUPABASE_ANON_KEY=your_supabase_anon_key
-   OPENAI_API_KEY=your_openai_api_key
+   GEMINI_API_KEY=your_gemini_api_key
    ```
 
 5. **Set up database**
@@ -199,7 +199,7 @@ The application uses two main tables:
 ```env
 SUPABASE_URL=your_supabase_project_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
-OPENAI_API_KEY=your_openai_api_key
+GEMINI_API_KEY=your_gemini_api_key
 ```
 
 **Frontend (.env.local)**
@@ -231,7 +231,7 @@ The application includes comprehensive error handling:
 
 - **Network errors**: Displays user-friendly messages when backend is unreachable
 - **Validation errors**: Shows specific field validation issues
-- **AI failures**: Provides fallback analysis when OpenAI API is unavailable
+- **AI failures**: Provides fallback analysis when Gemini API is unavailable
 - **Database errors**: Handles Supabase connection issues gracefully
 
 ## Contributing
