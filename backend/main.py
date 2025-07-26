@@ -3,7 +3,6 @@ import os
 
 load_dotenv()
 
-
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -11,14 +10,14 @@ from typing import List, Optional
 from datetime import datetime, date
 import os
 from supabase import create_client, Client
-import openai
+import google.generativeai as genai
 
 app = FastAPI(title="Transcript Insight API", version="1.0.0")
 
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Next.js dev server
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -29,8 +28,9 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# OpenAI client  
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Configure Gemini
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Pydantic models
 class TranscriptCreate(BaseModel):
@@ -123,22 +123,18 @@ async def get_supabase_client():
     return supabase
 
 async def analyze_transcript(transcript: str, custom_prompt: Optional[str] = None) -> str:
-    """Analyze transcript using AI"""
+    """Analyze transcript using Gemini AI"""
     try:
         prompt = custom_prompt if custom_prompt else DEFAULT_TRANSCRIPT_PROMPT
         
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": prompt},
-                {"role": "user", "content": f"Here is the transcript to analyze:\n\n{transcript}"}
-            ],
-            max_tokens=1000,
-            temperature=0.7
-        )
+        full_prompt = f"{prompt}\n\nHere is the transcript to analyze:\n\n{transcript}"
         
-        return response.choices[0].message.content.strip()
+        # Generate content using Gemini
+        response = model.generate_content(full_prompt)
+        
+        return response.text.strip()
     except Exception as e:
+        print(f"Gemini API Error: {str(e)}")  # Add logging for debugging
         # Fallback analysis if AI fails
         return f"""**Analysis Complete**
 
@@ -157,10 +153,10 @@ async def analyze_transcript(transcript: str, custom_prompt: Optional[str] = Non
 - Ask more follow-up questions to deepen understanding
 - Use pause techniques to allow for better responses
 
-*Note: AI analysis temporarily unavailable, this is a basic assessment.*"""
+*Note: AI analysis temporarily unavailable ({str(e)}), this is a basic assessment.*"""
 
 async def analyze_linkedin_icebreaker(linkedin_bio: str, pitch_deck: str, prospect_name: str, company_name: str, role_level: str, custom_prompt: Optional[str] = None) -> str:
-    """Analyze LinkedIn profile and pitch deck for icebreaker generation"""
+    """Analyze LinkedIn profile and pitch deck for icebreaker generation using Gemini"""
     try:
         prompt = custom_prompt if custom_prompt else DEFAULT_LINKEDIN_PROMPT
         
@@ -176,18 +172,14 @@ PITCH DECK CONTENT:
 {pitch_deck}
 """
         
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": prompt},
-                {"role": "user", "content": content}
-            ],
-            max_tokens=1500,
-            temperature=0.7
-        )
+        full_prompt = f"{prompt}\n\n{content}"
         
-        return response.choices[0].message.content.strip()
+        # Generate content using Gemini
+        response = model.generate_content(full_prompt)
+        
+        return response.text.strip()
     except Exception as e:
+        print(f"Gemini API Error: {str(e)}")  # Add logging for debugging
         # Fallback analysis if AI fails
         return f"""**LinkedIn Icebreaker Analysis for {prospect_name}**
 
@@ -222,7 +214,7 @@ PITCH DECK CONTENT:
 2. How can our solution directly address their business objectives?
 3. What would be the most compelling ROI story for this prospect?
 
-*Note: AI analysis temporarily unavailable, this is a basic assessment based on provided information.*"""
+*Note: AI analysis temporarily unavailable ({str(e)}), this is a basic assessment based on provided information.*"""
 
 @app.get("/")
 async def root():
